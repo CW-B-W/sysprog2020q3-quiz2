@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 
 bool is_ascii(const char str[], size_t size)
 {
@@ -25,6 +26,46 @@ bool is_ascii(const char str[], size_t size)
     return true;
 }
 
+inline int isAlphabetChar(char c)
+{
+    return 
+        (('A' <= c) && (c <= 'Z')) ||
+        (('a' <= c) && (c <= 'z')) ;
+}
+
+/*
+ * return whether s only contains english alphabets, i.e., 'a'~'z' or 'A'~'Z'
+ */
+int isAlphabetString(char *s, size_t n)
+{
+#define PACKED_BYTE(b) (((uint64_t)(b) & (0xff)) * 0x0101010101010101u)    
+    size_t k = n / 8;
+    for (size_t i = 0; i < k; i++, s += 8) {
+        uint64_t *chunk = (uint64_t *) s;
+        if ((*chunk & PACKED_BYTE(0x80)) == 0) { /* is ASCII? */
+            uint64_t A = *chunk + PACKED_BYTE(128 - ('A' + 0)); 
+            uint64_t Z = *chunk + PACKED_BYTE(128 - ('Z' + 1));
+            uint64_t a = *chunk + PACKED_BYTE(128 - ('a' + 0)); 
+            uint64_t z = *chunk + PACKED_BYTE(128 - ('z' + 1));
+            uint64_t isAlpha = (((A ^ Z) | (a ^ z)) & PACKED_BYTE(0x80));
+            if (isAlpha != 0x8080808080808080) {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    }
+    
+    k = n % 8;
+    if (k)
+        while (k--) {
+            if (!isAlphabetChar(*s))
+                return 0;
+            s++;
+        }
+    return 1;
+#undef PACKED_BYTE
+}
 
 int main()
 {
@@ -33,11 +74,26 @@ int main()
     for (int i = 0; i < 26; ++i) {
         s[i] = 'a'+i;
     }
-    printf("%d\n", is_ascii(s, 26));
+    assert(true == is_ascii(s, 26));
 
     for (int i = 0; i < 26; ++i) {
         s[i] = 130+i;
     }
-    printf("%d\n", is_ascii(s, 26));
+    assert(false == is_ascii(s, 26));
+
+    for (int i = 0; i < 26; ++i) {
+        s[i] = '0'+i;
+    }
+    assert(false == isAlphabetString(s, 26));
+
+    for (int i = 0; i < 26; ++i) {
+        s[i] = 'a'+i;
+    }
+    assert(true == isAlphabetString(s, 26));
+
+    for (int i = 0; i < 26; ++i) {
+        s[i] = 'A'+i;
+    }
+    assert(true == isAlphabetString(s, 26));
     return 0;
 }
