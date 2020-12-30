@@ -6,6 +6,18 @@
 #include <ctype.h>
 #include <assert.h>
 
+bool is_ascii_naive(const char str[], size_t size)
+{
+    if (size == 0)
+        return false;
+    int i = 0;
+    for (i = 0; i < size; ++i) {
+        if (str[i] & 0x80)
+            return false;
+    }
+    return true;
+}
+
 bool is_ascii(const char str[], size_t size)
 {
     if (size == 0)
@@ -75,11 +87,13 @@ int main()
         s[i] = 'a'+i;
     }
     assert(true == is_ascii(s, 26));
+    assert(true == is_ascii_naive(s, 26));
 
     for (int i = 0; i < 26; ++i) {
         s[i] = 130+i;
     }
     assert(false == is_ascii(s, 26));
+    assert(false == is_ascii_naive(s, 26));
 
     for (int i = 0; i < 26; ++i) {
         s[i] = '0'+i;
