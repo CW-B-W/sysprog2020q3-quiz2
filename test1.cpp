@@ -45,10 +45,18 @@ inline int isAlphabetChar(char c)
         (('a' <= c) && (c <= 'z')) ;
 }
 
+int isAlphabetString_naive(const char* s, size_t n)
+{
+    for (int i = 0; i < n; ++i)
+        if (!isAlphabetChar(s[i]))
+            return false;
+    return true;
+}
+
 /*
  * return whether s only contains english alphabets, i.e., 'a'~'z' or 'A'~'Z'
  */
-int isAlphabetString(char *s, size_t n)
+int isAlphabetString(const char *s, size_t n)
 {
 #define PACKED_BYTE(b) (((uint64_t)(b) & (0xff)) * 0x0101010101010101u)    
     size_t k = n / 8;
@@ -99,15 +107,18 @@ int main()
         s[i] = '0'+i;
     }
     assert(false == isAlphabetString(s, 26));
+    assert(false == isAlphabetString_naive(s, 26));
 
     for (int i = 0; i < 26; ++i) {
         s[i] = 'a'+i;
     }
     assert(true == isAlphabetString(s, 26));
+    assert(true == isAlphabetString_naive(s, 26));
 
     for (int i = 0; i < 26; ++i) {
         s[i] = 'A'+i;
     }
     assert(true == isAlphabetString(s, 26));
+    assert(true == isAlphabetString_naive(s, 26));
     return 0;
 }
